@@ -1,7 +1,7 @@
 .PHONY: all clean fclean re
 CC = gcc
-CFLAGS = -Wall -Wextra
-CFLAGS_EXEC = -Wl,-strip-all
+CFLAGS = -Wall -Wextra -g3
+CFLAGS_EXEC = 
 NAME = life
 
 P_SRC = src/
@@ -10,6 +10,7 @@ P_OBJ = .obj/
 SRC = \
 	main.c \
 	life.c \
+	life_utils.c \
 
 INC = \
 	life.h

@@ -20,7 +20,9 @@ int main(int argc, char *argv[])
 		printf("Usage: %s width height iterations\n", argv[0]);
 		return 1;
 	}
-	int iterations;
+	if (argc == 2)
+		loadMap(argv[1]);
+	int iterations = 0;
 	if (argc == 4)
 	{
 		int width = atoi(argv[1]);
@@ -43,7 +45,7 @@ int main(int argc, char *argv[])
 	int ret = runGame(iterations);
 	if (ret == -1)
 		printf("Failed to run the game.\n");
-	else
+	else if (ret != iterations)
 		printf("Failed to run the game, only %d/%d iterations completed.\n", ret, iterations);
 	freeGame();
 	return ret;

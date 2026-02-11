@@ -7,16 +7,16 @@
 #define BUFFER_SIZE 100
 
 // Hold the 'structure' of the map
-static char **map = NULL;
-static char **old_map = NULL;
+char **map = NULL;
+char **old_map = NULL;
 
 // Hold the 'data' of the map
-static char *map_data = NULL;
-static char *old_map_data = NULL;
-static int map_width = -1;
-static int map_height = -1;
-static const char aliveCell = '0';
-static const char deadCell = ' ';
+char *map_data = NULL;
+char *old_map_data = NULL;
+int map_width = -1;
+int map_height = -1;
+const char aliveCell = '0';
+const char deadCell = ' ';
 
 int loadGameParams(int width, int height)
 {
@@ -49,10 +49,19 @@ int loadGameParams(int width, int height)
 	for (int i = 0; i < height; i++)
 	{
 		for (int j = 0; j < width; j++)
-			old_map[j][i] = deadCell;
+			old_map[i][j] = deadCell;
 	}
 	map_width = width;
 	map_height = height;
+	return 0;
+}
+
+int loadGameParamsFromFile(int fd)
+{
+	if (fd < 0)
+		return 1;
+	// map_width = width;
+	// map_height = height;
 	return 0;
 }
 
@@ -75,30 +84,23 @@ int runGame(int iterations)
 	}
 	for(int i = 0; i < iterations; i++)
 	{
-		;
+		for (int i = 0; i < map_height; i++)
+		{
+			for (int j = 0; j < map_width; j++)
+			{
+				int nei = countNeighbors(j, i);
+				if ((old_map[i][j] == aliveCell && nei == 2) || nei == 3)
+					map[i][j] = aliveCell;
+				else
+					map[i][j] = deadCell;
+			}
+		}
+		char **temp = map;
+		map = old_map;
+		old_map = temp;
 	}
 	printGame();
 	return iterations;
-}
-
-int verifyRun(int retOfRun, int iterations)
-{
-	if (retOfRun != iterations)
-	{
-		if (retOfRun == -1)
-			printf("Failed to run the game.\n");
-		else
-			printf("Failed to run the game, only %d/%d iterations completed.\n", retOfRun, iterations);
-		return 1;
-	}
-	return 0;
-}
-
-int isUpdateValid(int x, int y)
-{
-	if (x < 0 || y < 0 || x > map_width || y > map_height)
-		return (0);
-	return (1);
 }
 
 int interpret_sequence(char *buffer)
@@ -106,8 +108,8 @@ int interpret_sequence(char *buffer)
 	if (!buffer)
 		return (1);
 	char penWriting = 0;
-	int x;
-	int y;
+	int x = 0;
+	int y = 0;
 	for(size_t index = 0; buffer[index] != '\0'; index++)
 	{
 		switch (buffer[index])
@@ -116,26 +118,26 @@ int interpret_sequence(char *buffer)
 				penWriting = !penWriting;
 				break;
 			case 's':
-				if (isUpdateValid(x, y + 1))
+				if (isCoordValid(x, y + 1))
 					y++;
 				break;
 			case 'w':
-				if (isUpdateValid(x, y - 1))
+				if (isCoordValid(x, y - 1))
 					y--;
 				break;
 			case 'd':
-				if (isUpdateValid(x + 1, y))
+				if (isCoordValid(x + 1, y))
 					x++;
 				break;
 			case 'a':
-				if (isUpdateValid(x - 1, y))
+				if (isCoordValid(x - 1, y))
 					x--;
 				break;
 			default:
 				break; //ignore any other key
 		}
 		if (penWriting)
-			old_map[x][y] = aliveCell;
+			old_map[y][x] = aliveCell;
 	}
 	return (0);
 }
@@ -148,7 +150,7 @@ int interpret_sequence(char *buffer)
  * @param[in] filename filename of map
  * @return int 
  */
-int loadMap(char *filename)
+int loadMap(const char *filename)
 {
 	int fd;
 	char	buffer[BUFFER_SIZE];
@@ -159,6 +161,7 @@ int loadMap(char *filename)
 		fd = open(filename, O_RDONLY);
 		if (fd < 0)
 			return (1);
+		return loadGameParamsFromFile(fd);
 	}
 	else
 		fd = 0; //read on stdin
@@ -174,16 +177,4 @@ int loadMap(char *filename)
 	if (fd != 0)
 		close(fd);
 	return (0);
-}
-
-void printGame()
-{
-	printf("Debut:\n");
-	for (int i = 0; i < map_height; i++)
-	{
-		for (int j = 0; j < map_width; j++)
-			putchar(old_map[j][i]);
-		putchar('\n');
-	}
-	printf("Fin\n");
 }
