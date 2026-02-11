@@ -11,11 +11,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-int loadGame(int width, int height);
-int runGame(int iterations);
-int verifyRun(int retOfRun, int iterations);
-void freeGame();
+#include "life.h"
 
 int main(int argc, char *argv[])
 {
@@ -24,34 +20,31 @@ int main(int argc, char *argv[])
 		printf("Usage: %s width height iterations\n", argv[0]);
 		return 1;
 	}
+	int iterations;
 	if (argc == 4)
 	{
 		int width = atoi(argv[1]);
 		int height = atoi(argv[2]);
-		int iterations = atoi(argv[3]);
+		iterations = atoi(argv[3]);
 		if (width <= 0 || height <= 0 || iterations < 0)
 		{
 			printf("Width and height must be positive integers, and iterations must be a non-negative integer.\n");
 			return 1;
 		}
 		printf("Width: %d, Height: %d, Iterations: %d\n", width, height, iterations);
-		if (loadGame(10, 10) != 0)
+		if (loadGameParams(width, height) != 0)
 		{
 			freeGame();
 			printf("Failed to load the game.\n");
 			return 1;
 		}
-		int ret = runGame(iterations);
-		if (ret != iterations)
-		{
-			freeGame();
-			if (ret == -1)
-				printf("Failed to run the game.\n");
-			else
-				printf("Failed to run the game, only %d/%d iterations completed.\n", ret, iterations);
-			return 1;
-		}
+		loadMap(NULL);
 	}
+	int ret = runGame(iterations);
+	if (ret == -1)
+		printf("Failed to run the game.\n");
+	else
+		printf("Failed to run the game, only %d/%d iterations completed.\n", ret, iterations);
 	freeGame();
-	return 0;
+	return ret;
 }

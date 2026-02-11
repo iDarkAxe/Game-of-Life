@@ -11,19 +11,25 @@ SRC = \
 	main.c \
 	life.c \
 
+INC = \
+	life.h
+
 SRCS =	\
 	$(addprefix $(P_SRC), $(SRC))
+
+INCS = \
+	$(addprefix $(P_SRC), $(INC))
 
 OBJS = $(subst $(P_SRC), $(P_OBJ), $(SRCS:.c=.o))
 
 all: $(NAME)
 
-$(NAME): $(OBJS)
+$(NAME): $(OBJS) $(INCS)
 	$(CC) $(CFLAGS) $(CFLAGS_EXEC) -o $@ $^
 
-$(P_OBJ)%.o: $(P_SRC)%.c
-	mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
+$(P_OBJ)%.o: $(P_SRC)%.c $(INCS)
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@ -I $(P_SRC)
 
 clean:
 	rm -f $(OBJS)
