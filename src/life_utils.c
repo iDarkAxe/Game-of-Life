@@ -35,22 +35,23 @@ int	isCoordValid(int x, int y)
 
 void	printGame(void)
 {
-	printf("Debut:\n");
+	// printf("Debut:\n");
+	putchar('$');
 	for (int i = 0; i < map_height; i++)
 	{
 		for (int j = 0; j < map_width; j++)
 			putchar(old_map[i][j]);
-		putchar('$');
+		// putchar('$');
 		putchar('\n');
 	}
-	printf("Fin\n");
+	putchar('$');
+	// printf("Fin\n");
 }
 
 int	countNeighbors(int x, int y)
 {
 	int	count = 0;
 
-	count ;
 	if (x < 0 || y < 0)
 		return (0);
 	if (isCoordValid(x - 1, y - 1) && old_map[y - 1][x - 1] == aliveCell)
