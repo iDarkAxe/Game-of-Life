@@ -1,38 +1,39 @@
-#include <stdio.h>
 #include "life.h"
+#include <stdio.h>
 
 // extern char **map;
-extern char **old_map;
+extern char			**old_map;
 
 // Hold the 'data' of the map
 // extern char *map_data;
 // extern char *old_map_data;
-extern int map_width;
-extern int map_height;
-extern const char aliveCell;
-extern const char deadCell;
+extern int			map_width;
+extern int			map_height;
+extern const char	aliveCell;
+extern const char	deadCell;
 
-int verifyRun(int retOfRun, int iterations)
+int	verifyRun(int retOfRun, int iterations)
 {
 	if (retOfRun != iterations)
 	{
 		if (retOfRun == -1)
 			printf("Failed to run the game.\n");
 		else
-			printf("Failed to run the game, only %d/%d iterations completed.\n", retOfRun, iterations);
-		return 1;
+			printf("Failed to run the game, only %d/%d iterations completed.\n",
+				retOfRun, iterations);
+		return (1);
 	}
-	return 0;
+	return (0);
 }
 
-int isCoordValid(int x, int y)
+int	isCoordValid(int x, int y)
 {
 	if (x < 0 || y < 0 || x >= map_width || y >= map_height)
 		return (0);
 	return (1);
 }
 
-void printGame()
+void	printGame(void)
 {
 	printf("Debut:\n");
 	for (int i = 0; i < map_height; i++)
@@ -45,27 +46,28 @@ void printGame()
 	printf("Fin\n");
 }
 
-int countNeighbors(int x, int y)
+int	countNeighbors(int x, int y)
 {
-	int count = 0;
+	int	count = 0;
 
+	count ;
 	if (x < 0 || y < 0)
 		return (0);
-	if (isCoordValid(x - 1, y - 1) && old_map[x - 1][y - 1] == aliveCell)
+	if (isCoordValid(x - 1, y - 1) && old_map[y - 1][x - 1] == aliveCell)
 		count++;
-	if (isCoordValid(x, y - 1) && old_map[x][y - 1] == aliveCell)
+	if (isCoordValid(x - 1, y) && old_map[y][x - 1] == aliveCell)
 		count++;
-	if (isCoordValid(x + 1, y - 1) && old_map[x + 1][y - 1] == aliveCell)
+	if (isCoordValid(x - 1, y + 1) && old_map[y + 1][x - 1] == aliveCell)
 		count++;
-	if (isCoordValid(x - 1, y) && old_map[x - 1][y] == aliveCell)
+	if (isCoordValid(x, y - 1) && old_map[y - 1][x] == aliveCell)
 		count++;
-	if (isCoordValid(x + 1, y) && old_map[x + 1][y] == aliveCell)
+	if (isCoordValid(x, y + 1) && old_map[y + 1][x] == aliveCell)
 		count++;
-	if (isCoordValid(x - 1, y + 1) && old_map[x - 1][y + 1] == aliveCell)
+	if (isCoordValid(x + 1, y - 1) && old_map[y - 1][x + 1] == aliveCell)
 		count++;
-	if (isCoordValid(x, y + 1) && old_map[x][y + 1] == aliveCell)
+	if (isCoordValid(x + 1, y) && old_map[y][x + 1] == aliveCell)
 		count++;
-	if (isCoordValid(x + 1, y + 1) && old_map[x + 1][y + 1] == aliveCell)
+	if (isCoordValid(x + 1, y + 1) && old_map[y + 1][x + 1] == aliveCell)
 		count++;
 	return (count);
 }

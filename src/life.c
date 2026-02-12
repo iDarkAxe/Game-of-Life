@@ -1,45 +1,51 @@
 #include "life.h"
-#include <stdlib.h>
-#include <stdio.h>
 #include <fcntl.h> // for open
+#include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h> // for close
 
 #define BUFFER_SIZE 100
+#define PRINT_EACH_ITERATIONS 1
+#define PRINT_INVALID_LETTERS 0
+#define BLOCK_INVALID_LETTERS 0
+#define USE_PRINTF 1
 
 // Hold the 'structure' of the map
-char **map = NULL;
-char **old_map = NULL;
+char		**map = NULL;
+char		**old_map = NULL;
 
 // Hold the 'data' of the map
-char *map_data = NULL;
-char *old_map_data = NULL;
-int map_width = -1;
-int map_height = -1;
-const char aliveCell = '0';
-const char deadCell = ' ';
+char		*map_data = NULL;
+char		*old_map_data = NULL;
+int			map_width = -1;
+int			map_height = -1;
+int			target_iterations = -1;
+const char	aliveCell = '0';
+const char	deadCell = ' ';
 
-int loadGameParams(int width, int height)
+int	loadGameParams(int width, int height, int iterations)
 {
-	if (width <= 0 || height <= 0 || width * height < 1)
+	if (width <= 0 || height <= 0 || width * height < 1 || iterations < 0)
 	{
-		printf("Width and height must be positive integers, and iterations must be a non-negative integer.\n");
-		return 1;
+		if (USE_PRINTF)
+			printf("Width and height must be positive integers, \
+				and iterations must be a non-negative integer.\n");
+		return (1);
 	}
 	// Allouer les tableaux de pointeurs
 	map = malloc(height * sizeof(char *));
 	if (map == NULL)
-		return 1;
+		return (1);
 	old_map = malloc(height * sizeof(char *));
 	if (old_map == NULL)
-		return 1;
-
+		return (1);
 	// Allouer toutes les données en un seul bloc contigu
 	map_data = malloc(height * width * sizeof(char));
 	if (map_data == NULL)
-		return 1;
+		return (1);
 	old_map_data = malloc(height * width * sizeof(char));
 	if (old_map_data == NULL)
-		return 1;
+		return (1);
 	// Initialiser les pointeurs de lignes
 	for (int i = 0; i < height; i++)
 	{
@@ -53,88 +59,109 @@ int loadGameParams(int width, int height)
 	}
 	map_width = width;
 	map_height = height;
-	return 0;
+	target_iterations = iterations;
+	return (0);
 }
 
-int loadGameParamsFromFile(int fd)
+int	loadMapFromFile(const char *filename)
 {
-	if (fd < 0)
-		return 1;
-	// map_width = width;
-	// map_height = height;
-	return 0;
+	int	fd;
+
+	fd = 0;
+	(void)fd;
+	(void)filename;
+	return (0);
 }
 
-void freeGame()
+void	freeGame(void)
 {
-	void *pointers[] = {map, old_map, map_data, old_map_data};
-	for(size_t i = 0; i < sizeof(pointers) / sizeof(pointers[0]); i++)
+	void	*pointers[] = {map, old_map, map_data, old_map_data};
+
+	for (size_t i = 0; i < sizeof(pointers) / sizeof(pointers[0]); i++)
 	{
 		if (pointers[i] != NULL)
 			free(pointers[i]);
 	}
 }
 
-int runGame(int iterations)
+int	runGame(void)
 {
-	if (iterations < 0)
+	int		it;
+	int		nbNeighbors;
+	char	**temp;
+
+	if (target_iterations < 0)
 	{
-		printf("Iterations must be a non-negative integer.\n");
-		return -1;
+		if (USE_PRINTF)
+			printf("Iterations must be a non-negative integer.\n");
+		return (-1);
 	}
-	for(int i = 0; i < iterations; i++)
+	it = 0;
+	for (; it < target_iterations; it++)
 	{
-		for (int i = 0; i < map_height; i++)
+		for (int y = 0; y < map_height; y++)
 		{
-			for (int j = 0; j < map_width; j++)
+			for (int x = 0; x < map_width; x++)
 			{
-				int nei = countNeighbors(j, i);
-				if ((old_map[i][j] == aliveCell && nei == 2) || nei == 3)
-					map[i][j] = aliveCell;
+				nbNeighbors = countNeighbors(x, y);
+				if ((old_map[y][x] == aliveCell && nbNeighbors == 2) || nbNeighbors == 3)
+					map[y][x] = aliveCell;
 				else
-					map[i][j] = deadCell;
+					map[y][x] = deadCell;
 			}
 		}
-		char **temp = map;
+		temp = map;
 		map = old_map;
 		old_map = temp;
+		if (PRINT_EACH_ITERATIONS)
+			printGame();
 	}
-	printGame();
-	return iterations;
+	if (!PRINT_EACH_ITERATIONS || (target_iterations == 0
+			&& PRINT_EACH_ITERATIONS))
+		printGame();
+	return (verifyRun(it, target_iterations));
 }
 
-int interpret_sequence(char *buffer)
+int	interpret_sequence(char *buffer)
 {
+	char	penWriting;
+	int		x;
+	int		y;
+
 	if (!buffer)
 		return (1);
-	char penWriting = 0;
-	int x = 0;
-	int y = 0;
-	for(size_t index = 0; buffer[index] != '\0'; index++)
+	penWriting = 0;
+	x = 0;
+	y = 0;
+	for (size_t index = 0; buffer[index] != '\0'; index++)
 	{
 		switch (buffer[index])
 		{
-			case 'x':
-				penWriting = !penWriting;
-				break;
-			case 's':
-				if (isCoordValid(x, y + 1))
-					y++;
-				break;
-			case 'w':
-				if (isCoordValid(x, y - 1))
-					y--;
-				break;
-			case 'd':
-				if (isCoordValid(x + 1, y))
-					x++;
-				break;
-			case 'a':
-				if (isCoordValid(x - 1, y))
-					x--;
-				break;
-			default:
-				break; //ignore any other key
+		case 'x':
+			penWriting = !penWriting;
+			break ;
+		case 's':
+			if (isCoordValid(x, y + 1))
+				y++;
+			break ;
+		case 'w':
+			if (isCoordValid(x, y - 1))
+				y--;
+			break ;
+		case 'd':
+			if (isCoordValid(x + 1, y))
+				x++;
+			break ;
+		case 'a':
+			if (isCoordValid(x - 1, y))
+				x--;
+			break ;
+		default:
+			if (USE_PRINTF && PRINT_INVALID_LETTERS)
+				printf("'%c'<- is invalid\n", buffer[index]);
+			if (BLOCK_INVALID_LETTERS)
+				return (1);
+			break ; // ignore any other key
 		}
 		if (penWriting)
 			old_map[y][x] = aliveCell;
@@ -144,37 +171,24 @@ int interpret_sequence(char *buffer)
 
 /**
  * @brief Load the map
- * if filename isn't NULL, it will try to open the file and read from it.
- * It will read from stdin if not precised.
- * 
- * @param[in] filename filename of map
- * @return int 
+ * It will read from stdin.
+ *
+ * @return int
  */
-int loadMap(const char *filename)
+int	loadMap(void)
 {
-	int fd;
 	char	buffer[BUFFER_SIZE];
-	ssize_t ret;
-
-	if (filename)
-	{
-		fd = open(filename, O_RDONLY);
-		if (fd < 0)
-			return (1);
-		return loadGameParamsFromFile(fd);
-	}
-	else
-		fd = 0; //read on stdin
+	ssize_t	ret;
+	if (map_width <= 0 || map_height <= 0 || map_width * map_height < 1 || target_iterations < 0)
+		return 1;
 	while (1)
 	{
-		ret = read(fd, buffer, BUFFER_SIZE - 0);
+		ret = read(0, buffer, BUFFER_SIZE - 0);
 		if (ret < 0 || ret == 0)
-			break;
+			break ;
 		buffer[ret] = '\0';
 		if (interpret_sequence(buffer) != 0)
-			break;
+			break ;
 	}
-	if (fd != 0)
-		close(fd);
 	return (0);
 }
