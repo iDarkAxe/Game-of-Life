@@ -11,8 +11,8 @@ extern char			**old_map;
 // extern char *old_map_data;
 extern int			map_width;
 extern int			map_height;
-extern const char	aliveCell;
-extern const char	deadCell;
+extern char	aliveCell;
+extern char	deadCell;
 
 // Game init
 int		loadGameParams(int width, int height, int iterations);

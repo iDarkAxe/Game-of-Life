@@ -19,14 +19,21 @@ int	main(int argc, char *argv[])
 {
 	int	ret;
 
-	if (argc != 4)
+	if (argc != 4 && argc != 2)
 	{
 		printf("Usage: %s width height iterations\n", argv[0]);
+		printf("or\nUsage: %s filename\n", argv[0]);
 		return (1);
 	}
-	// TODO implement the possibility to load a map from a file
-	// else if (argc == 2)
-	// 	loadMapFromFile(argv[1]);
+	else if (argc == 2)
+	{
+		if (loadMapFromFile(argv[1]) != 0)
+		{
+			freeGame();
+			printf("Failed to load the game.\n");
+			return (1);
+		}
+	}
 	else if (argc == 4)
 	{
 		if (loadGameParams(atoi(argv[1]), atoi(argv[2]), atoi(argv[3])) != 0)

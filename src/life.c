@@ -1,4 +1,6 @@
 #include "life.h"
+#include "libft.h"
+#include "get_next_line.h"
 #include <fcntl.h> // for open
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,8 +24,8 @@ static char	*old_map_data = NULL;
 int			map_width = -1;
 int			map_height = -1;
 static int	target_iterations = -1;
-const char	aliveCell = '0';
-const char	deadCell = ' ';
+char	aliveCell = '0';
+char	deadCell = ' ';
 
 static int	interpret_sequence(char *buffer);
 
@@ -68,13 +70,84 @@ int	loadGameParams(int width, int height, int iterations)
 	return (0);
 }
 
+int loadConfigFromFile(const char *line)
+{
+	char **result = ft_split(line, ' ');
+	size_t nElements= 0;
+	for(; result && result[nElements]; nElements++)
+		;
+		// printf("%zu:%s\n", nElements, result[nElements]);
+	if (nElements != 3 && nElements != 5)
+	{
+		printf("Number of Elements in config should be 3 or 5\n");
+		printf("0:width\n1:height\n2:iterations\n3:deadCell character\n4:aliveCell character\n");
+		ft_free_array(result);
+		return (1);
+	}
+	if (nElements == 5)
+	{
+		deadCell = result[3][0];
+		aliveCell = result[4][0];
+	}
+	if (loadGameParams(atoi(result[0]), atoi(result[1]), atoi(result[2])) != 0)
+	{
+		ft_free_array(result);
+		return (1);
+	}
+	ft_free_array(result);
+	return (0);
+}
+
 int	loadMapFromFile(const char *filename)
 {
 	int	fd;
+	char isConfigLine = 1;
 
-	fd = 0;
-	(void)fd;
-	(void)filename;
+	fd = open(filename, O_RDONLY);
+	if (fd < 0)
+		return (1);
+	int y = 0;
+	while (1)
+	{
+		char *line = get_next_line(fd);
+		if (!line)
+			break;
+		if (isConfigLine)
+		{
+			isConfigLine = 0;
+			if (loadConfigFromFile(line) != 0)
+			{
+				free(line);
+				break;
+			}
+			free(line);
+			continue;
+		}
+		if (y >= map_height)
+		{
+			free(line);
+			break;
+		}
+		int len = (int)ft_strlen(line);
+		for(int i = 0; i < len; i++) // Replacing wrong characters in map with deadCells
+		{
+			if (line[i] != deadCell && line[i] != aliveCell)
+				line[i] = deadCell;
+		}
+		if (len <= map_width)
+		{
+			if (len > 0 && line[len - 1] == '\n')
+			    len--;
+			ft_memmove(old_map[y], line, len);
+			for(int i = len; i < map_width; i++)
+				old_map[y][i] = deadCell;
+		}
+		else
+			ft_memmove(old_map[y], line, map_width);
+		free(line);
+		y++;
+	}
+	close(fd);
 	return (0);
 }
 

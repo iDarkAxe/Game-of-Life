@@ -1,0 +1,124 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   get_next_line_bonus.c                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: ppontet <ppontet@student.42lyon.fr>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/12/05 16:09:19 by ppontet           #+#    #+#             */
+/*   Updated: 2026/02/23 16:29:30 by ppontet          ###   ########lyon.fr   */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "get_next_line_bonus.h"
+#include "libft.h"
+#include <stdlib.h>
+#include <unistd.h>
+
+static char	*ft_filler(int fd, char *backup, char *buffer);
+static char	*ft_make_line(char *buffer, char *backup);
+
+/**
+ * @brief Main function :
+ * Get the next line of a file descriptor
+ * Stops if '\'n is detected or it there's nothing to read
+ * /!\ Needs to be freed after use
+ *
+ * @param fd File descriptor
+ * @return char* Next line of the file
+ */
+char	*get_next_line(int fd)
+{
+	static char	backup[MAX_FD][GNL_BUFFER_SIZE + 1] = {0};
+	char		*line;
+	char		*buffer;
+
+	if (fd < 0 || GNL_BUFFER_SIZE <= 0)
+		return (NULL);
+	buffer = malloc(sizeof(char) * 1);
+	if (buffer == NULL)
+		return (NULL);
+	buffer[0] = '\0';
+	line = ft_filler(fd, backup[fd], buffer);
+	if (line == NULL)
+		return (NULL);
+	if (line[0] == '\0')
+	{
+		free(line);
+		return (NULL);
+	}
+	return (line);
+}
+
+/**
+ * @brief Fills 'backup', stores in a buffer,
+ * Stops if '\'n is detected or it there's nothing to read
+ * Read of fixed size at compilation (default is 42 bytes)
+ *
+ * @param fd File descriptor
+ * @param backup Backup of the buffer
+ * @param buffer Buffer to store the read data
+ * @return char* Next line of the file
+ */
+char	*ft_filler(int fd, char *backup, char *buffer)
+{
+	ssize_t	read_ret;
+	char	*tmp;
+
+	read_ret = 1;
+	while (read_ret > 0 && buffer)
+	{
+		if (backup[0] == '\0')
+		{
+			read_ret = read(fd, backup, GNL_BUFFER_SIZE);
+			if (read_ret < 0)
+			{
+				free(buffer);
+				return (NULL);
+			}
+			backup[read_ret] = '\0';
+		}
+		tmp = ft_strjoin(buffer, backup);
+		free(buffer);
+		buffer = tmp;
+		backup[0] = '\0';
+		if (buffer && ft_strchr(buffer, '\n'))
+			return (ft_make_line(buffer, backup));
+	}
+	return (buffer);
+}
+
+/**
+ * @brief Build a new array containing the new line
+ * and stores the rest of buffer into backup
+ *
+ * @param buffer Buffer to extract the line from
+ * @param backup Rest of the buffer
+ * @return char* Array containing the new line
+ */
+char	*ft_make_line(char *buffer, char *backup)
+{
+	size_t	index;
+	char	*line;
+
+	if (!buffer || buffer[0] == '\0')
+		return (NULL);
+	index = 0;
+	while (buffer[index] != '\0' && buffer[index] != '\n')
+		index++;
+	line = malloc(sizeof(char) * (index + 2));
+	if (!line)
+	{
+		free(buffer);
+		return (NULL);
+	}
+	ft_strlcpy(line, buffer, index + 2);
+	if (buffer[index] == '\n')
+		line[index + 1] = '\0';
+	if (buffer[index] != '\0')
+		ft_strlcpy(backup, &buffer[index + 1], GNL_BUFFER_SIZE + 1);
+	else
+		backup[0] = '\0';
+	free(buffer);
+	return (line);
+}
