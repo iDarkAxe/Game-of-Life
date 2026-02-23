@@ -25,9 +25,9 @@ int	main(int argc, char *argv[])
 		return (1);
 	}
 	// TODO implement the possibility to load a map from a file
-	// if (argc == 2)
+	// else if (argc == 2)
 	// 	loadMapFromFile(argv[1]);
-	if (argc == 4)
+	else if (argc == 4)
 	{
 		if (loadGameParams(atoi(argv[1]), atoi(argv[2]), atoi(argv[3])) != 0)
 		{

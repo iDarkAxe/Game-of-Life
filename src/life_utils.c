@@ -1,17 +1,6 @@
 #include "life.h"
 #include <stdio.h>
 
-// extern char **map;
-extern char			**old_map;
-
-// Hold the 'data' of the map
-// extern char *map_data;
-// extern char *old_map_data;
-extern int			map_width;
-extern int			map_height;
-extern const char	aliveCell;
-extern const char	deadCell;
-
 int	verifyRun(int retOfRun, int iterations)
 {
 	if (retOfRun != iterations)
@@ -36,15 +25,23 @@ int	isCoordValid(int x, int y)
 void	printGame(void)
 {
 	// printf("Debut:\n");
-	putchar('$');
+	if (PRINT_DOLLAR_WRAPPING_MAP)
+	{
+		putchar('$');
+		putchar('\n');
+	}
 	for (int i = 0; i < map_height; i++)
 	{
 		for (int j = 0; j < map_width; j++)
 			putchar(old_map[i][j]);
-		// putchar('$');
+		// putchar('$'); // using 'cat -e' after the program does it
 		putchar('\n');
 	}
-	putchar('$');
+	if (PRINT_DOLLAR_WRAPPING_MAP)
+	{
+		putchar('$');
+		putchar('\n');
+	}
 	// printf("Fin\n");
 }
 

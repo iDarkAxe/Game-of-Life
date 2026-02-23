@@ -5,27 +5,32 @@
 #include <unistd.h> // for close
 
 #define BUFFER_SIZE 100
-#define PRINT_EACH_ITERATIONS 1
+#define PRINT_EACH_ITERATIONS 0
+
 #define PRINT_INVALID_LETTERS 0
 #define BLOCK_INVALID_LETTERS 0
+
 #define USE_PRINTF 1
 
 // Hold the 'structure' of the map
-char		**map = NULL;
+static char	**map = NULL;
 char		**old_map = NULL;
 
 // Hold the 'data' of the map
-char		*map_data = NULL;
-char		*old_map_data = NULL;
+static char	*map_data = NULL;
+static char	*old_map_data = NULL;
 int			map_width = -1;
 int			map_height = -1;
-int			target_iterations = -1;
+static int	target_iterations = -1;
 const char	aliveCell = '0';
 const char	deadCell = ' ';
 
+static int	interpret_sequence(char *buffer);
+
 int	loadGameParams(int width, int height, int iterations)
 {
-	if (width <= 0 || height <= 0 || width * height < 1 || iterations < 0)
+	int map_chunk = width * height;
+	if (width <= 0 || height <= 0 || map_chunk < 1 || map_chunk < width || map_chunk < height || iterations < 0)
 	{
 		if (USE_PRINTF)
 			printf("Width and height must be positive integers, \
@@ -33,17 +38,17 @@ int	loadGameParams(int width, int height, int iterations)
 		return (1);
 	}
 	// Allouer les tableaux de pointeurs
-	map = malloc(height * sizeof(char *));
+	map = malloc((size_t)height * sizeof(char *));
 	if (map == NULL)
 		return (1);
-	old_map = malloc(height * sizeof(char *));
+	old_map = malloc((size_t)height * sizeof(char *));
 	if (old_map == NULL)
 		return (1);
 	// Allouer toutes les données en un seul bloc contigu
-	map_data = malloc(height * width * sizeof(char));
+	map_data = malloc((size_t)map_chunk * sizeof(char));
 	if (map_data == NULL)
 		return (1);
-	old_map_data = malloc(height * width * sizeof(char));
+	old_map_data = malloc((size_t)map_chunk * sizeof(char));
 	if (old_map_data == NULL)
 		return (1);
 	// Initialiser les pointeurs de lignes
@@ -86,9 +91,6 @@ void	freeGame(void)
 
 int	runGame(void)
 {
-	int		it;
-	int		nbNeighbors;
-	char	**temp;
 
 	if (target_iterations < 0)
 	{
@@ -96,21 +98,23 @@ int	runGame(void)
 			printf("Iterations must be a non-negative integer.\n");
 		return (-1);
 	}
-	it = 0;
+	int		it = 0;
+	
 	for (; it < target_iterations; it++)
 	{
 		for (int y = 0; y < map_height; y++)
 		{
 			for (int x = 0; x < map_width; x++)
 			{
-				nbNeighbors = countNeighbors(x, y);
-				if ((old_map[y][x] == aliveCell && nbNeighbors == 2) || nbNeighbors == 3)
+				int nbNeighbors = countNeighbors(x, y);
+				if ((old_map[y][x] == aliveCell && nbNeighbors == 2)
+					|| nbNeighbors == 3)
 					map[y][x] = aliveCell;
 				else
 					map[y][x] = deadCell;
 			}
 		}
-		temp = map;
+		char	**temp = map;
 		map = old_map;
 		old_map = temp;
 		if (PRINT_EACH_ITERATIONS)
@@ -124,15 +128,11 @@ int	runGame(void)
 
 int	interpret_sequence(char *buffer)
 {
-	char	penWriting;
-	int		x;
-	int		y;
-
 	if (!buffer)
 		return (1);
-	penWriting = 0;
-	x = 0;
-	y = 0;
+	char	penWriting = 0;
+	int		x = 0, y = 0;
+
 	for (size_t index = 0; buffer[index] != '\0'; index++)
 	{
 		switch (buffer[index])
@@ -179,8 +179,12 @@ int	loadMap(void)
 {
 	char	buffer[BUFFER_SIZE];
 	ssize_t	ret;
-	if (map_width <= 0 || map_height <= 0 || map_width * map_height < 1 || target_iterations < 0)
-		return 1;
+
+	int map_chunk = map_width * map_height;
+	if (map_width <= 0 || map_height <= 0 || map_chunk < 1
+		|| map_chunk < map_width || map_chunk < map_height
+		|| target_iterations < 0)
+		return (1);
 	while (1)
 	{
 		ret = read(0, buffer, BUFFER_SIZE - 0);
